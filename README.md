@@ -101,16 +101,6 @@
 - Tracks **request flow** across multiple services.
 - Displays API processing time.
 
----
-
-## **7. Future Enhancements**
-🚀 Support **gRPC** by logging gRPC request/response.
-🚀 Extend for **multi-service** with OpenTelemetry Collector.
-🚀 Integrate **ElasticSearch** for faster log search.
-
----
-
-💡 **Outcome**: A powerful logging system with comprehensive tracing, making debugging easier and more efficient. 🚀
 
 
 
