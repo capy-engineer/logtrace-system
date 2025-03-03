@@ -1,11 +1,11 @@
-# 📊 Project: LogTrace System with OpenTelemetry & RabbitMQ
+# 📊 Project: LogTrace System with OpenTelemetry & NATS
 
 ## *** System Design Document ***
 ![LogTrace System](pkg/log-system.png "LogTrace System")
 
 ## **1. Objectives**
 - Log request & response with **Trace ID**.
-- Push logs to **RabbitMQ** for asynchronous processing.
+- Push logs to **NATS** for asynchronous processing.
 - Store logs in **Loki** for querying and visualization in **Grafana**.
 - Track **tracing** with **OpenTelemetry & Jaeger**.
 - Easily extendable for multiple microservices.
@@ -14,9 +14,9 @@
 
 ## **2. System Architecture**
 ### **Main Components:**
-- **Middleware (Gin)**: Logs request & response, sends logs to RabbitMQ, integrates OpenTelemetry.
-- **RabbitMQ (Message Queue)**: Supports asynchronous log processing.
-- **Consumer (Worker)**: Receives logs from RabbitMQ, sends logs to Loki.
+- **Middleware (Gin)**: Logs request & response, sends logs to NATS, integrates OpenTelemetry.
+- **NATS (Message Queue)**: Supports asynchronous log processing.
+- **Consumer (Worker)**: Receives logs from NATS, sends logs to Loki.
 - **Loki + Grafana**: Stores & visualizes logs.
 - **Jaeger (Tracing)**: Tracks request flow across multiple services.
 
@@ -31,15 +31,15 @@
 - **Request & response body**.
 - **Headers**.
 
-✅ Send logs to **RabbitMQ** queue `logs`.
+✅ Send logs to **NATS** queue `logs`.
 ✅ Include **Trace ID** in logs to link with Jaeger.
 
-### **🟢 RabbitMQ**
+### **🟢 NATS**
 ✅ Queue `logs` receives logs from middleware.
 ✅ Ensures logs are not lost under high traffic conditions.
 
 ### **🟢 Consumer (Log Processor)**
-✅ Receives logs from RabbitMQ.
+✅ Receives logs from NATS.
 ✅ Prints logs to console for debugging.
 ✅ Sends logs to **Loki** via API.
 
@@ -58,7 +58,7 @@
 ## **4. Technologies Used**
 - **Golang** (Gin Framework) – Middleware for logging requests.
 - **OpenTelemetry** – Captures **Trace ID**.
-- **RabbitMQ** – Message queue for asynchronous log processing.
+- **NATS** – Message queue for asynchronous log processing.
 - **Loki** – Log storage.
 - **Grafana** – Log visualization.
 - **Jaeger** – Request tracing analysis.
@@ -69,10 +69,10 @@
 ## **5. Workflow**
 1. **Client sends request** to API.
 2. **Middleware captures request**, retrieves **Trace ID**, logs request body.
-3. **Log is pushed to RabbitMQ**.
+3. **Log is pushed to NATS**.
 4. **API processes request** and returns response.
 5. **Middleware captures response**, logs response body & duration.
-6. **Consumer retrieves log from RabbitMQ**, sends it to Loki.
+6. **Consumer retrieves log from NATS**, sends it to Loki.
 7. **Loki stores logs**, Grafana visualizes logs.
 8. **Jaeger tracks tracing**, displays detailed request flow.
 
@@ -94,7 +94,7 @@
 
 ### **✅ Grafana Logs Query**:
 ```logql
-{job="rabbitmq-logs"} | json | trace_id="a1b2c3d4"
+{job="NATS-logs"} | json | trace_id="a1b2c3d4"
 ```
 
 ### **✅ Jaeger UI**:
