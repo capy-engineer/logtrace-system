@@ -1,5 +1,8 @@
 # 📊 Project: LogTrace System with OpenTelemetry & RabbitMQ
 
+## *** System Design Document ***
+![LogTrace System](pkg/log-system.png "LogTrace System")
+
 ## **1. Objectives**
 - Log request & response with **Trace ID**.
 - Push logs to **RabbitMQ** for asynchronous processing.
