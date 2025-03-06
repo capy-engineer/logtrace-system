@@ -1,0 +1,19 @@
+info:
+  contact: {}
+paths:
+  /ping:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint checks the health of the service
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: pong
+          schema:
+            type: string
+      summary: Ping service
+      tags:
+      - health
+swagger: "2.0"

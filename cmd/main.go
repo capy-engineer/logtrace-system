@@ -2,21 +2,19 @@ package main
 
 import (
 	"context"
-	"log"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
-
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-
-	"github.com/swaggo/swag/example/basic/docs"
+	"log"
+	"logtrace/docs"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func main() {
@@ -83,17 +81,11 @@ func main() {
 	logrus.Info("Server exiting")
 }
 
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
-
-// @Summary Ping liquify service
+// @Summary Ping service
 // @Description This endpoint checks the health of the service
 // @Tags health
 // @Accept  json
 // @Produce json
-// @Param Authorization header string true "Bearer <your-token>"
-// @Security BearerAuth
 // @Success 200 {string} string "pong"
 // @Router /ping [get]
 func ping(c *gin.Context) {
