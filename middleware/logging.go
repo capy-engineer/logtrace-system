@@ -7,14 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RequestLog returns a middleware that logs request details including:
+// Logging returns a middleware that logs request details including:
 // - HTTP method
 // - Request path
 // - Client IP
 // - Response status code
 // - Latency time
 // - User agent
-func RequestLog() gin.HandlerFunc {
+func Logging() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Start timer
 		startTime := time.Now()

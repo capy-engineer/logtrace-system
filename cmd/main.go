@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"logtrace/docs"
+	"logtrace/middleware"
 	"net/http"
 	"os"
 	"os/signal"
@@ -46,6 +47,7 @@ func main() {
 	r.GET("/ping", ping)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
+	r.Use(middleware.Logging())
 	// v1 := r.Group("/v1")
 	srv := &http.Server{
 		Addr:    ":8080",
