@@ -40,12 +40,11 @@ func main() {
 	config.AddAllowHeaders("Authorization")
 	r.Use(cors.New(config))
 	
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	// Validation endpoints
-	r.Use(middleware.Logging())
 	r.GET("/ping", ping)
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	r.Use(middleware.Logging())
 
-	// v1 := r.Group("/v1")
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: r,
