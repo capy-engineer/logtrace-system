@@ -33,7 +33,7 @@ func Logging() gin.HandlerFunc {
 		userAgent := c.Request.UserAgent()
 
 		// Log format
-		logLine := fmt.Sprintf("[LOGGING] %s | %d | %v | %s | %s | %s",
+		logLine := fmt.Sprintf("[REQUEST] %s | %d | %v | %s | %s | %s",
 			method,
 			statusCode,
 			latency,

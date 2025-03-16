@@ -41,9 +41,9 @@ func main() {
 	r.Use(cors.New(config))
 	
 	// Validation endpoints
-	r.GET("/ping", ping)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	r.Use(middleware.Logging())
+	r.GET("/ping", ping)
 
 	srv := &http.Server{
 		Addr:    ":8080",
