@@ -1,33 +1,54 @@
 package middleware
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
+	"fmt"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
+// RequestLog returns a middleware that logs request details including:
+// - HTTP method
+// - Request path
+// - Client IP
+// - Response status code
+// - Latency time
+// - User agent
 func RequestLog() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		start := time.Now()
-		path := c.Request.URL.Path
-		raw := c.Request.URL.RawQuery
+		// Start timer
+		startTime := time.Now()
+
+		// Process request
 		c.Next()
-		end := time.Now()
-		latency := end.Sub(start)
+
+		// Calculate latency
+		latency := time.Since(startTime)
+
+		// Get request and response details
 		clientIP := c.ClientIP()
 		method := c.Request.Method
+		path := c.Request.URL.Path
 		statusCode := c.Writer.Status()
-		comment := c.Errors.ByType(gin.ErrorTypePrivate).String()
-		if raw != "" {
-			path = path + "?" + raw
+		userAgent := c.Request.UserAgent()
+
+		// Log format
+		logLine := fmt.Sprintf("[REQUEST] %s | %d | %v | %s | %s | %s",
+			method,
+			statusCode,
+			latency,
+			clientIP,
+			path,
+			userAgent,
+		)
+
+		// Log based on status code
+		if statusCode >= 500 {
+			c.Error(fmt.Errorf(logLine))
+		} else if statusCode >= 400 {
+			c.Error(fmt.Errorf(logLine))
+		} else {
+			fmt.Println(logLine)
 		}
-		logrus.WithFields(logrus.Fields{
-			"status":   statusCode,
-			"latency":  latency,
-			"clientIP": clientIP,
-			"method":   method,
-			"path":     path,
-			"comment":  comment,
-		}).Info("Request")
 	}
 }

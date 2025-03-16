@@ -1,5 +1,9 @@
 version: '3'
 services:
+
+  
+
+  # NATS server
   nats:
     image: nats:latest
     ports:
