@@ -61,7 +61,6 @@ func (c *NATSClient) SetupStream(config *nats.StreamConfig) error {
 	return nil
 }
 
-// Publish publishes a message to the specified subject
 func (c *NATSClient) Publish(subject string, data []byte) (*nats.PubAck, error) {
 	return c.js.Publish(subject, data)
 }
@@ -89,7 +88,6 @@ func (c *NATSClient) CreatePullConsumer(name string, filterSubject string) error
 	return nil
 }
 
-// CreatePushConsumer creates a push consumer with a message handler
 func (c *NATSClient) CreatePushConsumer(name string, filterSubject string, handler nats.MsgHandler) (*nats.Subscription, error) {
 	if c.streamCfg == nil {
 		return nil, fmt.Errorf("stream not set up; call SetupStream first")
@@ -111,13 +109,11 @@ func (c *NATSClient) CreatePushConsumer(name string, filterSubject string, handl
 	return sub, nil
 }
 
-// SubscribePull subscribes to a pull consumer and returns the subscription
 func (c *NATSClient) SubscribePull(consumerName string, filterSubject string) (*nats.Subscription, error) {
 	if c.streamCfg == nil {
 		return nil, fmt.Errorf("stream not set up; call SetupStream first")
 	}
 
-	// Make sure the consumer exists
 	err := c.CreatePullConsumer(consumerName, filterSubject)
 	if err != nil {
 		return nil, err
@@ -137,12 +133,10 @@ func (c *NATSClient) SubscribePull(consumerName string, filterSubject string) (*
 	return sub, nil
 }
 
-// RequestReply demonstrates standard NATS request-reply pattern (non-JetStream)
 func (c *NATSClient) RequestReply(subject string, data []byte, timeout time.Duration) (*nats.Msg, error) {
 	return c.conn.Request(subject, data, timeout)
 }
 
-// ListStreams lists all streams in the JetStream server
 func (c *NATSClient) ListStreams() ([]*nats.StreamInfo, error) {
 	var results []*nats.StreamInfo
 
