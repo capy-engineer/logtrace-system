@@ -1,27 +1,130 @@
 version: '3.8'
 
 services:
+  # NATS JetStream
   nats:
     image: nats:latest
     ports:
       - "4222:4222"    # Client connections
-      - "6222:6222"    # Route connections (for clustering)
       - "8222:8222"    # HTTP monitoring
-      - "7777:7777"    # Websocket connections
     command:
       - "-js"
       - "-m=8222"
       - "--store-dir=/data"
-      - "--debug=true"  # Enable debug logging
     volumes:
       - nats-data:/data
-    restart: unless-stopped
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "nats-server", "ping", "-s", "http://localhost:8222"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Loki for log storage
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki-data:/loki
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - app-network
+    depends_on:
+      - loki
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Jaeger for tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+      - "16686:16686"  # Web UI
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:16686/api/services || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # API Service
+  api-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    environment:
+      - NATS_URL=nats://nats:4222
+      - JAEGER_URL=jaeger:4317
+      - SERVICE_NAME=api-service
+      - ENVIRONMENT=development
+      - PORT=8080
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+    depends_on:
+      - nats
+      - jaeger
     deploy:
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 512M
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
+  # Log Consumer
+  log-consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile.consumer
+    environment:
+      - NATS_URL=nats://nats:4222
+      - LOKI_URL=http://loki:3100/loki/api/v1/push
+      - NATS_STREAM=logs
+      - LOG_SUBJECT=logs.>
+      - CONSUMER_NAME=loki-consumer
+    networks:
+      - app-network
+    depends_on:
+      - nats
+      - loki
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   nats-data:
+  loki-data:
+  grafana-data:
