@@ -1,4 +1,4 @@
-package components
+package nats
 
 import (
 	"fmt"
@@ -7,13 +7,13 @@ import (
 	"time"
 )
 
-type NATSClient struct {
+type natsClient struct {
 	conn      *nats.Conn
-	js        nats.JetStreamContext
+	Js        nats.JetStreamContext
 	streamCfg *nats.StreamConfig
 }
 
-func NewNATSClient(url string, options ...nats.Option) (*NATSClient, error) {
+func NewNATSClient(url string, options ...nats.Option) (*natsClient, error) {
 	// Connect to NATS
 	nc, err := nats.Connect(url, options...)
 	if err != nil {
@@ -27,30 +27,30 @@ func NewNATSClient(url string, options ...nats.Option) (*NATSClient, error) {
 		return nil, fmt.Errorf("failed to create JetStream context: %w", err)
 	}
 
-	return &NATSClient{
+	return &natsClient{
 		conn: nc,
-		js:   js,
+		Js:   js,
 	}, nil
 }
-func (c *NATSClient) Close() {
+func (c *natsClient) Close() {
 	if c.conn != nil {
 		c.conn.Close()
 	}
 }
 
-func (c *NATSClient) SetupStream(config *nats.StreamConfig) error {
+func (c *natsClient) SetupStream(config *nats.StreamConfig) error {
 	// Check if stream exists
-	_, err := c.js.StreamInfo(config.Name)
+	_, err := c.Js.StreamInfo(config.Name)
 	if err != nil {
 		// Stream doesn't exist, create it
-		_, err = c.js.AddStream(config)
+		_, err = c.Js.AddStream(config)
 		if err != nil {
 			return fmt.Errorf("failed to create stream: %w", err)
 		}
 		log.Printf("Stream %s created", config.Name)
 	} else {
 		// Stream exists, update it
-		_, err = c.js.UpdateStream(config)
+		_, err = c.Js.UpdateStream(config)
 		if err != nil {
 			return fmt.Errorf("failed to update stream: %w", err)
 		}
@@ -61,19 +61,19 @@ func (c *NATSClient) SetupStream(config *nats.StreamConfig) error {
 	return nil
 }
 
-func (c *NATSClient) Publish(subject string, data []byte) (*nats.PubAck, error) {
-	return c.js.Publish(subject, data)
+func (c *natsClient) Publish(subject string, data []byte) (*nats.PubAck, error) {
+	return c.Js.Publish(subject, data)
 }
 
-func (c *NATSClient) CreatePullConsumer(name string, filterSubject string) error {
+func (c *natsClient) CreatePullConsumer(name string, filterSubject string) error {
 	if c.streamCfg == nil {
 		return fmt.Errorf("stream not set up; call SetupStream first")
 	}
 
-	_, err := c.js.ConsumerInfo(c.streamCfg.Name, name)
+	_, err := c.Js.ConsumerInfo(c.streamCfg.Name, name)
 	if err != nil {
 		// Consumer doesn't exist, create it
-		_, err = c.js.AddConsumer(c.streamCfg.Name, &nats.ConsumerConfig{
+		_, err = c.Js.AddConsumer(c.streamCfg.Name, &nats.ConsumerConfig{
 			Durable:       name,
 			AckPolicy:     nats.AckExplicitPolicy,
 			FilterSubject: filterSubject,
@@ -88,13 +88,13 @@ func (c *NATSClient) CreatePullConsumer(name string, filterSubject string) error
 	return nil
 }
 
-func (c *NATSClient) CreatePushConsumer(name string, filterSubject string, handler nats.MsgHandler) (*nats.Subscription, error) {
+func (c *natsClient) CreatePushConsumer(name string, filterSubject string, handler nats.MsgHandler) (*nats.Subscription, error) {
 	if c.streamCfg == nil {
 		return nil, fmt.Errorf("stream not set up; call SetupStream first")
 	}
 
 	// Create a push subscription
-	sub, err := c.js.Subscribe(
+	sub, err := c.Js.Subscribe(
 		filterSubject,
 		handler,
 		nats.Durable(name),
@@ -109,7 +109,7 @@ func (c *NATSClient) CreatePushConsumer(name string, filterSubject string, handl
 	return sub, nil
 }
 
-func (c *NATSClient) SubscribePull(consumerName string, filterSubject string) (*nats.Subscription, error) {
+func (c *natsClient) SubscribePull(consumerName string, filterSubject string) (*nats.Subscription, error) {
 	if c.streamCfg == nil {
 		return nil, fmt.Errorf("stream not set up; call SetupStream first")
 	}
@@ -120,7 +120,7 @@ func (c *NATSClient) SubscribePull(consumerName string, filterSubject string) (*
 	}
 
 	// Create pull subscription
-	sub, err := c.js.PullSubscribe(
+	sub, err := c.Js.PullSubscribe(
 		filterSubject,
 		consumerName,
 		nats.Bind(c.streamCfg.Name, consumerName),
@@ -133,15 +133,15 @@ func (c *NATSClient) SubscribePull(consumerName string, filterSubject string) (*
 	return sub, nil
 }
 
-func (c *NATSClient) RequestReply(subject string, data []byte, timeout time.Duration) (*nats.Msg, error) {
+func (c *natsClient) RequestReply(subject string, data []byte, timeout time.Duration) (*nats.Msg, error) {
 	return c.conn.Request(subject, data, timeout)
 }
 
-func (c *NATSClient) ListStreams() ([]*nats.StreamInfo, error) {
+func (c *natsClient) ListStreams() ([]*nats.StreamInfo, error) {
 	var results []*nats.StreamInfo
 
 	// Get a stream context
-	ctx := c.js.StreamsInfo()
+	ctx := c.Js.StreamsInfo()
 
 	// Iterate through all streams
 	for info := range ctx {

@@ -5,7 +5,7 @@ import (
 	"log"
 	"logtrace/docs"
 	"logtrace/middleware"
-	"logtrace/pkg/components"
+	nats2 "logtrace/nats"
 	"net/http"
 	"os"
 	"os/signal"
@@ -36,7 +36,7 @@ func main() {
 	defer cancel()
 
 	// Connect to NATS with reconnection options
-	client, err := components.NewNATSClient("nats://localhost:4222",
+	client, err := nats2.NewNATSClient("nats://localhost:4222",
 		nats.ReconnectWait(2*time.Second),
 		nats.MaxReconnects(-1),
 		nats.DisconnectErrHandler(func(nc *nats.Conn, err error) {
@@ -75,7 +75,7 @@ func main() {
 
 	// Validation endpoints
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-	r.Use(middleware.Logging())
+	r.Use(middleware.Logger(client.Js, "orders-service", "development", "logs"))
 	r.GET("/ping", ping)
 
 	srv := &http.Server{
