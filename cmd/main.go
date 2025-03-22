@@ -2,22 +2,20 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"logtrace/docs"
 	"logtrace/middleware"
+	"logtrace/pkg/components"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/jetstream"
-
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/nats-io/nats.go"
 	"github.com/sirupsen/logrus"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -34,22 +32,36 @@ func main() {
 		port = "8080"
 	}
 
-	nc, _ := nats.Connect(nats.DefaultURL)
-
-	js, _ := jetstream.New(nc)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	stream, _ := js.Stream(ctx, "foo")
+	// Connect to NATS with reconnection options
+	client, err := components.NewNATSClient("nats://localhost:4222",
+		nats.ReconnectWait(2*time.Second),
+		nats.MaxReconnects(-1),
+		nats.DisconnectErrHandler(func(nc *nats.Conn, err error) {
+			log.Printf("Disconnected from NATS: %v", err)
+		}),
+		nats.ReconnectHandler(func(nc *nats.Conn) {
+			log.Printf("Reconnected to NATS server %s", nc.ConnectedUrl())
+		}),
+	)
+	if err != nil {
+		log.Fatalf("Failed to connect to NATS: %v", err)
+	}
+	defer client.Close()
 
-	cons, _ := stream.Consumer(ctx, "cons")
+	log.Println("Connected to NATS")
 
-	cc, _ := cons.Consume(func(msg jetstream.Msg) {
-		fmt.Println("Received jetstream message: ", string(msg.Data()))
-		msg.Ack()
+	err = client.SetupStream(&nats.StreamConfig{
+		Name:     "orders",
+		Subjects: []string{"orders.*"},
+		Storage:  nats.FileStorage,
+		MaxAge:   24 * time.Hour,
 	})
-	defer cc.Stop()
+	if err != nil {
+		log.Fatalf("Failed to setup stream: %v", err)
+	}
 
 	r := gin.Default()
 	docs.SwaggerInfo.BasePath = ""
