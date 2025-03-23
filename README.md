@@ -82,8 +82,8 @@ microservice-logger/
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-org/microservice-logger.git
-   cd microservice-logger
+   git clone https://github.com/capy-engineer/logtrace-system.git
+   cd logtrace-system
    ```
 
 2. Create required directories:
@@ -109,11 +109,10 @@ microservice-logger/
 
 The example API service provides these endpoints:
 
-- `GET /health`: Health check endpoint
+- `GET /ping`: Health check endpoint
 - `GET /api/v1/users`: Get all users
 - `GET /api/v1/users/:id`: Get user by ID
 - `POST /api/v1/users`: Create a new user
-- `GET /api/v1/error`: Generates an error (for testing logging)
 
 ## Using the Middleware in Other Services
 
@@ -175,7 +174,3 @@ Environment variables for configuration:
 - NATS JetStream provides persistent storage with configurable retention
 - Selective logging of request/response bodies based on content type
 - Configurable batch size and flush intervals
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
