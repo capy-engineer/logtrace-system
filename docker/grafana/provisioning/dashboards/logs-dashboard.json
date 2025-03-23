@@ -1,223 +1,353 @@
 {
-  "annotations": {
-    "list": [
-      {
-        "builtIn": 1,
-        "datasource": "-- Grafana --",
-        "enable": true,
-        "hide": true,
-        "iconColor": "rgba(0, 211, 255, 1)",
-        "name": "Annotations & Alerts",
-        "type": "dashboard"
-      }
-    ]
-  },
-  "editable": true,
-  "gnetId": null,
-  "graphTooltip": 0,
-  "id": 1,
-  "links": [],
-  "panels": [
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "Loki",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "hiddenSeries": false,
-      "id": 2,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "7.3.7",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "sum(count_over_time({service=\"api-service\"}[1m])) by (service)",
-          "legendFormat": "{{service}}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Request Rate",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "datasource": "Loki",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 8
-      },
-      "id": 4,
-      "options": {
-        "showLabels": false,
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": true
-      },
-      "pluginVersion": "7.3.7",
-      "targets": [
-        {
-          "expr": "{service=\"api-service\"}",
-          "refId": "A"
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Logs",
-      "type": "logs"
-    },
-    {
-      "datasource": "Loki",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": null,
-            "filterable": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 16
-      },
-      "id": 6,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "mean"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "7.3.7",
-      "targets": [
-        {
-          "expr": "sum(count_over_time({service=\"api-service\", status=\"500\"}[15m]))",
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "5xx Errors (15m)",
-      "type": "stat"
-    }
-  ],
-  "schemaVersion": 26,
-  "style": "dark",
-  "tags": [],
-  "templating": {
-    "list": []
-  },
-  "time": {
-    "from": "now-6h",
-    "to": "now"
-  },
-  "timepicker": {},
-  "timezone": "",
-  "title": "Microservices Logs",
-  "uid": "microservices-logs",
-  "version": 1
+"annotations": {
+"list": [
+{
+"builtIn": 1,
+"datasource": "-- Grafana --",
+"enable": true,
+"hide": true,
+"iconColor": "rgba(0, 211, 255, 1)",
+"name": "Annotations & Alerts",
+"type": "dashboard"
+}
+]
+},
+"editable": true,
+"gnetId": null,
+"graphTooltip": 0,
+"id": 1,
+"links": [],
+"panels": [
+{
+"aliasColors": {},
+"bars": false,
+"dashLength": 10,
+"dashes": false,
+"datasource": "Loki",
+"fieldConfig": {
+"defaults": {
+"custom": {}
+},
+"overrides": []
+},
+"fill": 1,
+"fillGradient": 0,
+"gridPos": {
+"h": 8,
+"w": 24,
+"x": 0,
+"y": 0
+},
+"hiddenSeries": false,
+"id": 2,
+"legend": {
+"avg": false,
+"current": false,
+"max": false,
+"min": false,
+"show": true,
+"total": false,
+"values": false
+},
+"lines": true,
+"linewidth": 1,
+"nullPointMode": "null",
+"options": {
+"alertThreshold": true
+},
+"percentage": false,
+"pluginVersion": "7.3.7",
+"pointradius": 2,
+"points": false,
+"renderer": "flot",
+"seriesOverrides": [],
+"spaceLength": 10,
+"stack": false,
+"steppedLine": false,
+"targets": [
+{
+"expr": "sum(count_over_time({service=\"api-service\"}[1m])) by (service)",
+"legendFormat": "{{service}}",
+"refId": "A"
+}
+],
+"thresholds": [],
+"timeFrom": null,
+"timeRegions": [],
+"timeShift": null,
+"title": "Request Rate",
+"tooltip": {
+"shared": true,
+"sort": 0,
+"value_type": "individual"
+},
+"type": "graph",
+"xaxis": {
+"buckets": null,
+"mode": "time",
+"name": null,
+"show": true,
+"values": []
+},
+"yaxes": [
+{
+"format": "short",
+"label": null,
+"logBase": 1,
+"max": null,
+"min": null,
+"show": true
+},
+{
+"format": "short",
+"label": null,
+"logBase": 1,
+"max": null,
+"min": null,
+"show": true
+}
+],
+"yaxis": {
+"align": false,
+"alignLevel": null
+}
+},
+{
+"datasource": "Loki",
+"fieldConfig": {
+"defaults": {
+"custom": {}
+},
+"overrides": []
+},
+"gridPos": {
+"h": 8,
+"w": 24,
+"x": 0,
+"y": 8
+},
+"id": 4,
+"options": {
+"showLabels": false,
+"showTime": true,
+"sortOrder": "Descending",
+"wrapLogMessage": true
+},
+"pluginVersion": "7.3.7",
+"targets": [
+{
+"expr": "{service=\"api-service\"}",
+"refId": "A"
+}
+],
+"timeFrom": null,
+"timeShift": null,
+"title": "API Service Logs",
+"type": "logs"
+},
+{
+"datasource": "Loki",
+"fieldConfig": {
+"defaults": {
+"custom": {
+"align": null,
+"filterable": false
+},
+"mappings": [],
+"thresholds": {
+"mode": "absolute",
+"steps": [
+{
+"color": "green",
+"value": null
+},
+{
+"color": "red",
+"value": 1
+}
+]
+}
+},
+"overrides": []
+},
+"gridPos": {
+"h": 8,
+"w": 12,
+"x": 0,
+"y": 16
+},
+"id": 6,
+"options": {
+"colorMode": "value",
+"graphMode": "area",
+"justifyMode": "auto",
+"orientation": "auto",
+"reduceOptions": {
+"calcs": [
+"sum"
+],
+"fields": "",
+"values": false
+},
+"textMode": "auto"
+},
+"pluginVersion": "7.3.7",
+"targets": [
+{
+"expr": "sum(count_over_time({service=\"api-service\", status=\"500\"}[15m]))",
+"legendFormat": "",
+"refId": "A"
+}
+],
+"timeFrom": null,
+"timeShift": null,
+"title": "5xx Errors (15m)",
+"type": "stat"
+},
+{
+"datasource": "Loki",
+"fieldConfig": {
+"defaults": {
+"custom": {
+"align": null,
+"filterable": false
+},
+"mappings": [],
+"thresholds": {
+"mode": "absolute",
+"steps": [
+{
+"color": "green",
+"value": null
+},
+{
+"color": "yellow",
+"value": 200
+},
+{
+"color": "red",
+"value": 500
+}
+]
+},
+"unit": "ms"
+},
+"overrides": []
+},
+"gridPos": {
+"h": 8,
+"w": 12,
+"x": 12,
+"y": 16
+},
+"id": 8,
+"options": {
+"colorMode": "value",
+"graphMode": "area",
+"justifyMode": "auto",
+"orientation": "auto",
+"reduceOptions": {
+"calcs": [
+"mean"
+],
+"fields": "",
+"values": false
+},
+"textMode": "auto"
+},
+"pluginVersion": "7.3.7",
+"targets": [
+{
+"expr": "avg(avg_over_time({service=\"api-service\"} | json | unwrap latency_ms [1m]))",
+"legendFormat": "",
+"refId": "A"
+}
+],
+"timeFrom": null,
+"timeShift": null,
+"title": "Average Response Time",
+"type": "stat"
+},
+{
+"datasource": "Loki",
+"fieldConfig": {
+"defaults": {
+"custom": {}
+},
+"overrides": []
+},
+"gridPos": {
+"h": 8,
+"w": 24,
+"x": 0,
+"y": 24
+},
+"id": 10,
+"options": {
+"showLabels": false,
+"showTime": true,
+"sortOrder": "Descending",
+"wrapLogMessage": true
+},
+"pluginVersion": "7.3.7",
+"targets": [
+{
+"expr": "{service=\"api-service\"} |= \"error\"",
+"refId": "A"
+}
+],
+"timeFrom": null,
+"timeShift": null,
+"title": "Error Logs",
+"type": "logs"
+},
+{
+"datasource": "Loki",
+"fieldConfig": {
+"defaults": {
+"custom": {}
+},
+"overrides": []
+},
+"gridPos": {
+"h": 8,
+"w": 24,
+"x": 0,
+"y": 32
+},
+"id": 12,
+"options": {
+"showLabels": false,
+"showTime": true,
+"sortOrder": "Descending",
+"wrapLogMessage": true
+},
+"pluginVersion": "7.3.7",
+"targets": [
+{
+"expr": "{service=\"api-service\"} | json | trace_id=~\".+\" | line_format \"{{.trace_id}} {{.method}} {{.path}} {{.status}} {{.latency_ms}}ms\"",
+"refId": "A"
+}
+],
+"timeFrom": null,
+"timeShift": null,
+"title": "Traces in Logs",
+"type": "logs"
+}
+],
+"schemaVersion": 26,
+"style": "dark",
+"tags": [],
+"templating": {
+"list": []
+},
+"time": {
+"from": "now-6h",
+"to": "now"
+},
+"timepicker": {},
+"timezone": "",
+"title": "Microservices Logs",
+"uid": "microservices-logs",
+"version": 1
 }
