@@ -3,15 +3,15 @@ package middleware
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/google/uuid"
+	"github.com/nats-io/nats.go"
+	"go.opentelemetry.io/otel/trace"
 	"io"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/nats-io/nats.go"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // LogEntry represents a structured log entry
@@ -30,6 +30,18 @@ type LogEntry struct {
 	Headers      map[string]string `json:"headers,omitempty"`
 	ServiceName  string            `json:"service_name"`
 	Environment  string            `json:"environment"`
+	Error        string            `json:"error,omitempty"`
+}
+
+// bodyLogWriter is a custom response writer that captures the response body
+type bodyLogWriter struct {
+	gin.ResponseWriter
+	body *bytes.Buffer
+}
+
+func (w *bodyLogWriter) Write(b []byte) (int, error) {
+	w.body.Write(b)
+	return w.ResponseWriter.Write(b)
 }
 
 // Logger is a middleware that logs request & response info to NATS
@@ -52,9 +64,9 @@ func Logger(js nats.JetStreamContext, serviceName, environment, subject string) 
 		// Set trace ID in response header
 		c.Header("X-Trace-ID", traceID)
 
-		// Read request body
+		// Read request body if it's not a multipart form
 		var requestBodyBytes []byte
-		if c.Request.Body != nil && c.Request.Body != http.NoBody {
+		if c.Request.Body != nil && c.Request.Body != http.NoBody && !strings.Contains(c.GetHeader("Content-Type"), "multipart/form-data") {
 			requestBodyBytes, _ = io.ReadAll(c.Request.Body)
 			// Restore the body so it can be read again in handlers
 			c.Request.Body = io.NopCloser(bytes.NewBuffer(requestBodyBytes))
@@ -91,6 +103,11 @@ func Logger(js nats.JetStreamContext, serviceName, environment, subject string) 
 			Environment: environment,
 		}
 
+		// Capture errors from gin context
+		if len(c.Errors) > 0 {
+			entry.Error = c.Errors.String()
+		}
+
 		// Include request body for non-binary content types
 		contentType := c.GetHeader("Content-Type")
 		if !isBinaryContent(contentType) && len(requestBodyBytes) > 0 {
@@ -118,7 +135,6 @@ func Logger(js nats.JetStreamContext, serviceName, environment, subject string) 
 		entryJSON, err := json.Marshal(entry)
 		if err != nil {
 			// If JSON marshaling fails, just log the error and continue
-			// Real implementations would handle this more gracefully
 			return
 		}
 
@@ -129,18 +145,6 @@ func Logger(js nats.JetStreamContext, serviceName, environment, subject string) 
 			// For now, we'll just continue
 		}
 	}
-}
-
-// bodyLogWriter is a custom response writer that captures the response body
-type bodyLogWriter struct {
-	gin.ResponseWriter
-	body *bytes.Buffer
-}
-
-// Write captures the response body
-func (w *bodyLogWriter) Write(b []byte) (int, error) {
-	w.body.Write(b)
-	return w.ResponseWriter.Write(b)
 }
 
 // isBinaryContent checks if the content type is binary
