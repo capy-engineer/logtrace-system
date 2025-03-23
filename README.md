@@ -11,9 +11,6 @@ This project implements a comprehensive logging and tracing system for microserv
 - Easy extension for multiple microservices
 - Batch processing for efficient log handling
 
-## Architecture
-
-![Architecture Diagram](https://mermaid.ink/img/pako:eNptUsFqwzAM_RWhUwv5gN2ywWCw9jLYJ100ZBZOpDRm9kFKtn-fkyzttsMgSH56evqSNmCsMxiArXy7vSJEEZ6fwJj5mPzwFZ4rUSRrS9QQQvlXw8e8LMvEfmkkmzJd5J7DcFpXnJZAIdC5DmWMZDyJqF2TXtYuGb1Nx-OXPzFmU1eZloPRnRNJgDlRYd29YQ-JDFg6F9Z3aAQXUqfjrD3sNXTHy13iDy7c99jqHXNwm_6vUe2CJnVhkq8Gl6Gj-bJy_XyV1kxb5EfEmr1aUv-YKxM6fFvIRJLIcJMMpXVqZgaVPXpJ5GxZQ0CfLvbH0GNgX9mTb5aE2Xm6AybGxOAG5dZiScyj-MFgUgUZlRfQbkUzRZowoHJz5wUEiX-lfwd4wuC4Gw-)
 
 ### Components
 

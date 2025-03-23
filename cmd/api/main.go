@@ -2,111 +2,119 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"logtrace/docs"
+	"logtrace/internal/config"
 	"logtrace/internal/middleware"
-	nats2 "logtrace/internal/nats"
+	natsclient "logtrace/internal/nats"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"github.com/nats-io/nats.go"
-	"github.com/sirupsen/logrus"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func main() {
-	err := godotenv.Load()
+	cfg := config.Load()
+	// Initialize tracing
+	shutdown, err := middleware.InitTracer(cfg.ServiceName, cfg.JaegerURL)
 	if err != nil {
-		logrus.WithError(err).Error("Error loading .env file")
+		log.Fatalf("Failed to initialize tracer: %v", err)
 	}
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	// Connect to NATS with reconnection options
-	client, err := nats2.NewNATSClient("nats://localhost:4222",
-		nats.ReconnectWait(2*time.Second),
-		nats.MaxReconnects(-1),
-		nats.DisconnectErrHandler(func(nc *nats.Conn, err error) {
-			log.Printf("Disconnected from NATS: %v", err)
-		}),
-		nats.ReconnectHandler(func(nc *nats.Conn) {
-			log.Printf("Reconnected to NATS server %s", nc.ConnectedUrl())
-		}),
-	)
-	if err != nil {
-		log.Fatalf("Failed to connect to NATS: %v", err)
-	}
-	defer client.Close()
-
-	log.Println("Connected to NATS")
-
-	err = client.SetupStream(&nats.StreamConfig{
-		Name:     "orders",
-		Subjects: []string{"orders.*"},
-		Storage:  nats.FileStorage,
-		MaxAge:   24 * time.Hour,
-	})
-	if err != nil {
-		log.Fatalf("Failed to setup stream: %v", err)
-	}
-
-	r := gin.Default()
-	docs.SwaggerInfo.BasePath = ""
-	r.Use(gin.Recovery())
-
-	config := cors.DefaultConfig()
-	config.AllowAllOrigins = true
-	config.AllowCredentials = true
-	config.AddAllowHeaders("Authorization")
-	r.Use(cors.New(config))
-
-	// Validation endpoints
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-	r.Use(middleware.Logger(client.Js, "orders-service", "development", "logs"))
-	r.GET("/ping", ping)
-
-	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: r,
-	}
-
-	go func() {
-		// service connections
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logrus.WithError(err).Error("listen error")
+	defer func() {
+		if err := shutdown(context.Background()); err != nil {
+			log.Printf("Error shutting down tracer: %v", err)
 		}
 	}()
 
-	// Wait for interrupt signal to gracefully shutdown the server with
+	// Set up NATS client
+	natsConfig := natsclient.Config{
+		URL:             cfg.NatsURL,
+		ReconnectWait:   2 * time.Second,
+		MaxReconnects:   -1,
+		ConnectionName:  cfg.ServiceName,
+		StreamName:      cfg.NatsStreamName,
+		StreamSubjects:  cfg.NatsSubjects,
+		RetentionPolicy: nats.WorkQueuePolicy,
+		StorageType:     cfg.NatsStorageType,
+		MaxAge:          cfg.NatsMaxAge,
+		Replicas:        cfg.NatsReplicas,
+	}
+
+	client, err := natsclient.NewClient(natsConfig)
+	if err != nil {
+		log.Fatalf("Failed to create NATS client: %v", err)
+	}
+	defer client.Close()
+
+	log.Printf("Connected to NATS at %s", cfg.NatsURL)
+
+	// Set up the log subject
+	logSubject := fmt.Sprintf("logs.%s", cfg.ServiceName)
+
+	// Set up Gin router
+	router := gin.New()
+	docs.SwaggerInfo.BasePath = ""
+	router.Use(gin.Recovery())
+	router.Use(middleware.Tracing(cfg.ServiceName))
+	router.Use(middleware.Logger(client.JS, cfg.ServiceName, cfg.Environment, logSubject))
+
+	// Validation endpoints
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	router.GET("/ping", ping)
+
+	// Set up routes
+	setupRoutes(router)
+
+	// Create HTTP server
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%d", cfg.Port),
+		Handler: router,
+	}
+
+	go func() {
+		log.Printf("Starting %s server on port %d", cfg.ServiceName, cfg.Port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Failed to start server: %v", err)
+		}
+	}()
+	// Wait for interrupt signal
 	quit := make(chan os.Signal, 1)
-	// kill (no param) default send syscall.SIGTERM
-	// kill -2 is syscall.SIGINT
-	// kill -9 is syscall. SIGKILL but can"t be catch, so don't need add it
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutdown Server ...")
+
+	log.Println("Shutting down server...")
+
+	// Give the server 5 seconds to finish ongoing requests
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		logrus.WithError(err).Error("Server Shutdown Failed")
+		log.Fatalf("Server forced to shutdown: %v", err)
 	}
-	select {
-	case <-ctx.Done():
-		logrus.Info("timeout of 5 seconds.")
+
+	log.Println("Server exiting")
+}
+
+// setupRoutes adds routes to the Gin router
+func setupRoutes(router *gin.Engine) {
+	// Health check
+	router.GET("/ping", ping)
+
+	// Example API endpoints
+	v1 := router.Group("/api/v1")
+	{
+		v1.GET("/users")
+		v1.GET("/users/:id")
+		v1.POST("/users")
+		v1.GET("/error") // Example endpoint to test error logging
 	}
-	logrus.Info("Server exiting")
 }
 
 // @Summary Ping service

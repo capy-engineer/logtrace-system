@@ -8,8 +8,8 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-// natsClient encapsulates NATS connection and JetStream context
-type natsClient struct {
+// NatsClient encapsulates NATS connection and JetStream context
+type NatsClient struct {
 	Conn      *nats.Conn
 	JS        nats.JetStreamContext
 	StreamCfg *nats.StreamConfig
@@ -30,7 +30,7 @@ type Config struct {
 }
 
 // NewClient creates a new NATS client with JetStream enabled
-func NewClient(config Config) (*natsClient, error) {
+func NewClient(config Config) (*NatsClient, error) {
 	// Define connection options
 	opts := []nats.Option{
 		nats.Name(config.ConnectionName),
@@ -60,7 +60,7 @@ func NewClient(config Config) (*natsClient, error) {
 		return nil, fmt.Errorf("failed to create JetStream context: %w", err)
 	}
 
-	client := &natsClient{
+	client := &NatsClient{
 		Conn: nc,
 		JS:   js,
 	}
@@ -78,7 +78,7 @@ func NewClient(config Config) (*natsClient, error) {
 }
 
 // SetupStream creates or updates a JetStream stream
-func (c *natsClient) SetupStream(config Config) error {
+func (c *NatsClient) SetupStream(config Config) error {
 	// Check if stream exists
 	_, err := c.JS.StreamInfo(config.StreamName)
 	if err != nil {
@@ -129,19 +129,19 @@ func (c *natsClient) SetupStream(config Config) error {
 }
 
 // Close gracefully shuts down the NATS connection
-func (c *natsClient) Close() {
+func (c *NatsClient) Close() {
 	if c.Conn != nil {
 		c.Conn.Close()
 	}
 }
 
 // Publish publishes a message to the specified subject
-func (c *natsClient) Publish(subject string, data []byte) (*nats.PubAck, error) {
+func (c *NatsClient) Publish(subject string, data []byte) (*nats.PubAck, error) {
 	return c.JS.Publish(subject, data)
 }
 
 // CreatePullConsumer creates a pull consumer if it doesn't already exist
-func (c *natsClient) CreatePullConsumer(name string, filterSubject string) error {
+func (c *NatsClient) CreatePullConsumer(name string, filterSubject string) error {
 	if c.StreamCfg == nil {
 		return fmt.Errorf("stream not set up; call SetupStream first")
 	}
@@ -166,7 +166,7 @@ func (c *natsClient) CreatePullConsumer(name string, filterSubject string) error
 }
 
 // CreatePushConsumer creates a push consumer with a message handler
-func (c *natsClient) CreatePushConsumer(name string, filterSubject string, handler nats.MsgHandler) (*nats.Subscription, error) {
+func (c *NatsClient) CreatePushConsumer(name string, filterSubject string, handler nats.MsgHandler) (*nats.Subscription, error) {
 	if c.StreamCfg == nil {
 		return nil, fmt.Errorf("stream not set up; call SetupStream first")
 	}
@@ -188,7 +188,7 @@ func (c *natsClient) CreatePushConsumer(name string, filterSubject string, handl
 }
 
 // SubscribePull subscribes to a pull consumer and returns the subscription
-func (c *natsClient) SubscribePull(consumerName string, filterSubject string) (*nats.Subscription, error) {
+func (c *NatsClient) SubscribePull(consumerName string, filterSubject string) (*nats.Subscription, error) {
 	if c.StreamCfg == nil {
 		return nil, fmt.Errorf("stream not set up; call SetupStream first")
 	}
@@ -214,12 +214,12 @@ func (c *natsClient) SubscribePull(consumerName string, filterSubject string) (*
 }
 
 // RequestReply demonstrates standard NATS request-reply pattern (non-JetStream)
-func (c *natsClient) RequestReply(subject string, data []byte, timeout time.Duration) (*nats.Msg, error) {
+func (c *NatsClient) RequestReply(subject string, data []byte, timeout time.Duration) (*nats.Msg, error) {
 	return c.Conn.Request(subject, data, timeout)
 }
 
 // ListStreams lists all streams in the JetStream server
-func (c *natsClient) ListStreams() ([]*nats.StreamInfo, error) {
+func (c *NatsClient) ListStreams() ([]*nats.StreamInfo, error) {
 	var results []*nats.StreamInfo
 
 	// Get a stream context
