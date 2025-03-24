@@ -10,24 +10,20 @@ import (
 	"time"
 )
 
-// Client represents a Loki client
 type Client struct {
 	URL        string
 	HTTPClient *http.Client
 }
 
-// PushRequest is the structure needed for Loki push API
 type PushRequest struct {
 	Streams []Stream `json:"streams"`
 }
 
-// Stream represents a stream of logs with a set of labels
 type Stream struct {
 	Stream map[string]string `json:"stream"`
 	Values [][]string        `json:"values"` // [timestamp, log line]
 }
 
-// NewClient creates a new Loki client
 func NewClient(url string) *Client {
 	return &Client{
 		URL: url,
@@ -37,15 +33,12 @@ func NewClient(url string) *Client {
 	}
 }
 
-// SendLog sends a log entry to Loki
 func (c *Client) SendLog(entry middleware.LogEntry) error {
-	// Convert log entry to JSON for Loki
 	logLine, err := json.Marshal(entry)
 	if err != nil {
 		return fmt.Errorf("failed to marshal log entry: %w", err)
 	}
 
-	// Format timestamp for Loki (nanoseconds since epoch)
 	timestampNano := entry.Timestamp.UnixNano()
 	timestampStr := fmt.Sprintf("%d", timestampNano)
 
@@ -104,7 +97,6 @@ func (c *Client) sendToLoki(req PushRequest) error {
 	return nil
 }
 
-// SendBatchLogs sends multiple log entries to Loki in a single request
 func (c *Client) SendBatchLogs(entries []middleware.LogEntry) error {
 	if len(entries) == 0 {
 		return nil

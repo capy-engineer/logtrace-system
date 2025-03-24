@@ -17,7 +17,6 @@ import (
 )
 
 func main() {
-	// Load configuration
 	cfg := config.Load()
 
 	// Set consumer name

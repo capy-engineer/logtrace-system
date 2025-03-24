@@ -22,7 +22,6 @@ import (
 
 func main() {
 	cfg := config.Load()
-	// Initialize tracing
 	shutdown, err := middleware.InitTracer(cfg.ServiceName, cfg.JaegerURL)
 	if err != nil {
 		log.Fatalf("Failed to initialize tracer: %v", err)
@@ -62,12 +61,12 @@ func main() {
 	router := gin.New()
 	docs.SwaggerInfo.BasePath = ""
 	router.Use(gin.Recovery())
+	router.Use(gin.Logger())
 	router.Use(middleware.Tracing(cfg.ServiceName))
 	router.Use(middleware.Logger(client.JS, cfg.ServiceName, cfg.Environment, logSubject))
 
 	// Validation endpoints
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-	router.GET("/ping", ping)
 
 	// Set up routes
 	setupRoutes(router)

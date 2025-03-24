@@ -44,7 +44,6 @@ func (w *bodyLogWriter) Write(b []byte) (int, error) {
 	return w.ResponseWriter.Write(b)
 }
 
-// Logger is a middleware that logs request & response info to NATS
 func Logger(js nats.JetStreamContext, serviceName, environment, subject string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Start timer
@@ -147,7 +146,6 @@ func Logger(js nats.JetStreamContext, serviceName, environment, subject string) 
 	}
 }
 
-// isBinaryContent checks if the content type is binary
 func isBinaryContent(contentType string) bool {
 	if contentType == "" {
 		return false

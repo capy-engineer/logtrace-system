@@ -10,16 +10,17 @@ services:
     command:
       - "-js"
       - "-m=8222"
-      - "--store-dir=/data"
+      - "--store_dir=/data"
     volumes:
       - nats-data:/data
     networks:
       - app-network
     healthcheck:
-      test: ["CMD", "nats-server", "ping", "-s", "http://localhost:8222"]
+      test: [ "CMD", "curl", "-v", "http://localhost:8222/healthz" ]
       interval: 10s
       timeout: 5s
       retries: 3
+
 
   # Loki for log storage
   loki:

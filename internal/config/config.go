@@ -30,7 +30,6 @@ type Config struct {
 	LokiURL string
 }
 
-// Load loads configuration from environment variables with defaults
 func Load() *Config {
 	// Set defaults
 	config := &Config{
